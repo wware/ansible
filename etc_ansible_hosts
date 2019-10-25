@@ -1,0 +1,32 @@
+---
+# An example /etc/ansible/hosts file
+all:
+  children:
+    web:
+      hosts:
+        machine1:
+          # these are host variables
+          name: web-1
+          ansible_ssh_host: 54.175.186.234
+          ansible_ssh_user: ec2-user
+          private_ip: 172.31.25.62
+          workdir: /home/ec2-user
+        machine2:
+          name: web-2
+          ansible_ssh_host: 54.175.186.235
+          ansible_ssh_user: ec2-user
+    db:
+      vars:
+        # these are group variables
+        db_host: amber-buildbot-4
+        db_user: buildbot_prod
+        db_passwd: buildbot_prod
+      hosts:
+        machine3:
+          name: db-1
+          ansible_ssh_host: 54.175.186.236
+          ansible_ssh_user: ec2-user
+        machine4:
+          name: db-2
+          ansible_ssh_host: 54.175.186.237
+          ansible_ssh_user: ec2-user
