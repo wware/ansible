@@ -1,0 +1,53 @@
+---
+- hosts: localhost
+  tasks:
+  - name: Pull Ubuntu image
+    docker_image:
+      name: ubuntu
+
+  - name: Build simple Flask server
+    docker_image:
+      path: .
+      name: simple_flask
+      tag: 0.1
+
+  - name: Create Flask server container1
+    docker_container:
+      name: my-flask1
+      image: simple_flask:0.1
+      ports:
+        - "4000:5000"
+        - "9022:22"
+      env:
+        KEY: value1
+      command: python hello.py
+    register: flask1
+
+  - name: Create Flask server container2
+    docker_container:
+      name: my-flask2
+      image: simple_flask:0.1
+      ports:
+        - "4001:5000"
+        - "9023:22"
+      env:
+        KEY: value2
+      command: python hello.py
+    register: flask2
+
+  - name: Create Flask server container3
+    docker_container:
+      name: my-flask3
+      image: simple_flask:0.1
+      ports:
+        - "4002:5000"
+        - "9024:22"
+      env:
+        KEY: value3
+      command: python hello.py
+    register: flask3
+
+  - debug: msg="{{ flask1.ansible_facts.docker_container.NetworkSettings.IPAddress }}"
+  - debug: msg="{{ flask2.ansible_facts.docker_container.NetworkSettings.IPAddress }}"
+  - debug: msg="{{ flask3.ansible_facts.docker_container.NetworkSettings.IPAddress }}"
+  # - debug: var=flask1

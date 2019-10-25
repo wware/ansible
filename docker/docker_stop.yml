@@ -1,0 +1,17 @@
+---
+- hosts: localhost
+  tasks:
+    - name: Remove Flask server container1
+      docker_container:
+        name: my-flask1
+        state: absent
+
+    - name: Remove Flask server container2
+      docker_container:
+        name: my-flask2
+        state: absent
+
+    - name: Remove Flask server container3
+      docker_container:
+        name: my-flask3
+        state: absent
