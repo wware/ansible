@@ -27,11 +27,26 @@ Ansible can deploy the same code on multiple platforms: do development in
 [AWS](https://en.wikipedia.org/wiki/Amazon_Web_Services) or 
 [Kubernetes](https://kubernetes.io/) or whatever Unixy metal you have around.
 
+If you have some very repeatable way (ideally automated) to bring up a blank
+machine that accepts SSH connections, then Ansible can take care of any further
+machine configuration, and voila, you've got
+[Infrastructure-as-Code](https://en.wikipedia.org/wiki/Infrastructure_as_code)
+with all the benefits that accrue therefrom.
+
+Ansible can deploy the same code on multiple platforms, so you could do
+development in [Docker](https://en.wikipedia.org/wiki/Docker_(software)) or
+[Xen](https://en.wikipedia.org/wiki/Xen) and deploy to
+[Raspberry Pi](https://en.wikipedia.org/wiki/Raspberry_Pi) or
+[AWS](https://en.wikipedia.org/wiki/Amazon_Web_Services) or
+[Kubernetes](https://kubernetes.io/) or whatever Unixy metal you have around.
+
 Ansible can take commands one at a time on the command line, or it can
 take batches of instructions in files called "playbooks". I'll discuss
 playbooks later.
 
-# Ad-hoc commands
+[A little more useful Ansible info](https://gist.github.com/wware/c63554cccd535f370453dd51d3af811c)
+
+## Hello, World
 
 This is the "Hello World" command for Ansible.
 
@@ -44,6 +59,16 @@ you'll see warnings about that. This is equivalent to typing:
     ssh <user>@<host> echo Hello World
 
 for every machine in the inventory file, but it's a lot less typing.
+You can specify a non-standard inventory file like this:
+
+    ansible -i inventory.yaml all -a "echo HELLO"
+
+The default inventory file is `/etc/ansible/hosts`.
+
+Some commands are so popular that people have written Ansible modules for them,
+for instance
+
+    ansible all -m ping
 
 You can run a command on a bunch of machines like this:
 
@@ -80,16 +105,29 @@ We can also use combinations of groups
 This would be useful if we have more groups, or some subgroups. Groups
 can be overlapping or disjoint.
 
+So we can address the workers in group "abc", and ignore machines in group
+"def", by typing
+
+    ansible 'abc:!def' -a "echo Hello, World"
+
+We can even use three terms. Here we select all the machines in "abc"
+and "def", but only if they are also in group "ghi".
+
+    ansible 'abc:def:&ghi' -a "echo Hello, World"
+
+As far as I know, there is nothing equivalent to parentheses that would allow
+even more flexibility in combining groups.
+
 ## More example Ansible commands
 
     # Ping local machine
     ansible -c local -m ping all
 
     # Ping remote machine
-    ansible -c local -m ping amber-bbot-3
+    ansible -c local -m ping host-1234
 
     # Run a command on a remote machine
-    ansible <hostname> -m shell -a "echo HELLO"
+    ansible host-1234 -m shell -a "echo HELLO"
 
     # Identify local machine
     ansible localhost -a whoami
@@ -101,20 +139,19 @@ can be overlapping or disjoint.
     ansible -m setup localhost
 
     # Gather facts about remote servers
-    ansible -m setup 'dev:&linux' -u ec2-user
+    ansible -m setup 'abc:&def' -u ec2-user
 
     # How long has host been running since last restart?
     ansible all -m command -a uptime
 
-## Jinja2 templating within an ad-hoc command
-
-    # last three characters of user name, Python expressions work
+    # Jinja2 templating works, Python expressions work
+    # take last three characters of user name
     ansible all -m debug -a "msg={{ ansible_ssh_user[-3:] }}"
 
     # select ansible module based on user name
     ansible -c local -m "{% if ansible_ssh_user == 'ec2-user' %}debug{% else %}fail{% endif %}" all
 
-# Host and group variables
+## Host and group variables
 
 Ansible uses Jinja2-style templating for variables in commands. Our inventory
 file defines some database-related variables for the "dev" group which are used
@@ -137,6 +174,28 @@ module.
 The `-a "foo=this bar=that xyzzy=other"` piece is how arguments are passed to the module,
 and this is actually taken from the INI syntax mentioned earlier. In playbooks, these
 arguments are usually done as YAML lists.
+[This page](https://docs.ansible.com/ansible/latest/dev_guide/developing_modules_general.html)
+tells how to develop your own Ansible module, which is done in Python.
+
+Here are a few of the most useful modules.
+* [shell](https://docs.ansible.com/ansible/latest/modules/shell_module.html):
+  run shell commands on the host
+* [file](https://docs.ansible.com/ansible/latest/modules/file_module.html):
+  copy files or create symlinks on the host, or change attributes,
+  or other stuff with files
+* [copy](https://docs.ansible.com/ansible/latest/modules/copy_module.html):
+  push a file to a host
+* [fetch](https://docs.ansible.com/ansible/latest/modules/fetch_module.html):
+  pull a file from a host
+* [script](https://docs.ansible.com/ansible/latest/modules/script_module.html):
+  run a shell script on the remote machine
+
+Surprisingly, among the various
+[database-related modules](https://docs.ansible.com/ansible/latest/modules/list_of_database_modules.html),
+there is one for
+[running queries on PostgreSQL](https://docs.ansible.com/ansible/latest/modules/postgresql_query_module.html)
+but no MySQL module that can run queries. You can do that using the `-m script`
+module or you can roll your own MySQL module.
 
 The Ansible user community has written tons of modules for different
 tasks and platforms,
