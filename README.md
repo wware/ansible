@@ -153,16 +153,14 @@ even more flexibility in combining groups.
 
 ## Host and group variables
 
-Ansible uses Jinja2-style templating for variables in commands. Our inventory
-file defines some database-related variables for the "dev" group which are used
-here.
+Ansible uses Jinja2-style templating for variables in commands. Your inventory
+file might define some database-related variables for a group of machines, allowing
+you to do something like this.
 
     ansible db -m shell -a "echo 'show databases;' | mysql -h {{db_host}} -u {{db_user}} --password={{db_passwd}}"
 
-There are also variables for individual hosts or machines. Each machine has an
-`ansible_ssh_user` variable which Ansbile uses to put together SSH commands. The
-workers all have `workdir` and `tasks` variables. These can be used with the same
-kind of templating.
+There are also variables for individual hosts or machines. Ansible uses a variable called
+`ansible_ssh_user` to put together SSH commands.
 
 # Ansible modules
 
